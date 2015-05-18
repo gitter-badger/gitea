@@ -281,6 +281,29 @@ func IsUsableName(name string) error {
 	return nil
 }
 
+// IsUsableName checks if name is reserved or pattern of name is not allowed.
+func IsRepoUsableName(name string) error {
+	name = strings.TrimSpace(strings.ToLower(name))
+	if utf8.RuneCountInString(name) == 0 {
+		return ErrNameEmpty
+	}
+
+	for i := range reservedNames {
+		if name == reservedNames[i] {
+			return ErrNameReserved{name}
+		}
+	}
+
+	for _, pat := range reservedPatterns {
+		if pat[0] == '*' && strings.HasSuffix(name, pat[1:]) ||
+			(pat[len(pat)-1] == '*' && strings.HasPrefix(name, pat[:len(pat)-1])) {
+			return ErrNamePatternNotAllowed{pat}
+		}
+	}
+
+	return nil
+}
+
 // Mirror represents a mirror information of repository.
 type Mirror struct {
 	Id         int64
